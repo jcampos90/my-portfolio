@@ -4,6 +4,8 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { certifications } from "@/content/certifications";
 import { education, site } from "@/content/site";
 
+import { Analytics } from "@/components/analytics";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -101,6 +103,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <body className="min-h-dvh antialiased">
         {children}
+        <Analytics />
         <script
           type="application/ld+json"
           // Static, author-controlled data — not user input.

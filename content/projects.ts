@@ -2,56 +2,67 @@
  * Featured projects — the small set of repositories presented with a written
  * account of the work. See CONTEXT.md ("Featured project").
  *
- * Only linkable work belongs here. Confidential work is described in
- * content/experience.ts instead, and unlinkable CV claims stay in the
- * experience and skills sections.
+ * Every claim below was checked against the source, not the README. Two of
+ * these repositories' READMEs describe designs the code no longer has
+ * (MySaaS's setup instructions target a class library; order-manager's
+ * authentication section describes a removed Owner-only model), so the copy
+ * here follows the code and, for order-manager, CONTEXT.md plus its ADRs.
+ *
+ * Do not add a claim here that you have not verified in the repository.
  */
 
 export type Project = {
   slug: string;
   name: string;
   tagline: string;
-  repoUrl: string;
+  /** Omitted when the source is not published — a dead link is worse than none. */
+  repoUrl?: string;
+  /** Shown instead of the source link when there is nothing to link to. */
+  sourceNote?: string;
   stack: string[];
   body: string[];
 };
 
 export const projects: Project[] = [
   {
-    slug: "mysaas",
-    name: "MySaaS",
-    tagline:
-      "A modular monolith template whose architectural boundaries are enforced by tests rather than by convention.",
-    repoUrl: "https://github.com/jcampos90/dotnet-modulith-saas-template",
-    stack: [".NET 10", "EF Core", "MediatR", "PostgreSQL", "Architecture tests"],
-    body: [
-      "A starting point for SaaS products built as a modular monolith: a single deployable unit with real internal boundaries, so you keep the operational simplicity of one application without the coupling that usually arrives with it.",
-      "The interesting part is enforcement. The rules about which module may talk to which are asserted by architecture tests that fail the build when someone reaches across a boundary — which is what keeps the design honest a year later, when nobody remembers the diagram.",
-      "State changes and their side effects are kept together through a transactional outbox, so a domain event can't be published for work that was later rolled back.",
-    ],
-  },
-  {
     slug: "order-manager",
     name: "Order Manager",
     tagline:
-      "Order management for a small bakery, built decision-first: a specification, a domain glossary, and four ADRs before implementation.",
+      "Order management for a small bakery, built decision-first: a domain glossary and four ADRs before implementation.",
     repoUrl: "https://github.com/jcampos90/blazor_order_manager",
-    stack: [".NET 10", "Blazor Server", "ASP.NET Core Identity", "PostgreSQL"],
+    stack: [".NET 10", "Blazor Server", "ASP.NET Core Identity", "PostgreSQL", "xUnit", "Docker"],
     body: [
-      "A Spanish-language application for a bakery that takes advance orders, where the deadline is derived rather than typed in: the system works backwards from the delivery time to the moment preparation has to begin.",
-      "It is also where I practise the working method I'd want on a team. The requirements live in a written specification, the domain vocabulary lives in a context document, and the decisions that shaped the design are recorded as ADRs beside the code — with a test suite covering the parts that are expensive to get wrong.",
+      "A Spanish-language application for a bakery that takes advance orders. The central idea is that the deadline is derived rather than typed in: each order line knows its preparation time, so the app works backwards from the delivery time to the moment preparation has to start, and buckets orders by urgency from there.",
+      "The business rules live in plain, testable services rather than inside components — preparation scheduling, urgency buckets, validation, order drafts — so the rules that matter are the easy ones to cover. The suite is 79 facts and 4 theories across 13 files.",
+      "Four ADRs sit beside the code and are actually maintained, including a real supersession chain: the original Clerk/OIDC decision was superseded by ASP.NET Core Identity with local cookie auth, which was then amended by the staff-role and user-management decision. A glossary fixes the domain vocabulary — Owner versus Staff, Order versus OrderLine — so the words in the code and the words in the conversation stay the same.",
+    ],
+  },
+  {
+    slug: "mysaas",
+    name: "MySaaS",
+    tagline:
+      "An architecture template for a modular monolith: one deployable unit, real internal boundaries, and decisions written down.",
+    repoUrl: "https://github.com/jcampos90/dotnet-modulith-saas-template",
+    stack: [".NET 10", "EF Core", "PostgreSQL", "MediatR", "NetArchTest", "Docker"],
+    body: [
+      "Three business modules — Identity, Billing, and Features — each split into Domain, Application, Infrastructure, Contracts, and PublicApi, deployed as a single API. Every module owns its own PostgreSQL schema, and one module reads another's data through its Contracts project rather than reaching into its internals.",
+      "The part I care about most is enforcement. A NetArchTest suite asserts layer dependencies, module boundaries, contracts purity, and naming conventions, so a boundary violation fails the build instead of being caught in review. The coverage is deliberately partial — several assemblies are still on the TODO list — but the mechanism is real, and it is the practice I would carry onto a team.",
+      "Domain events go through a transactional outbox: the publisher writes an outbox row into the same DbContext as the state change, and a background service drains it and marks it processed, so an event can't escape for work that was later rolled back.",
+      "This is a template and an architecture demonstration first — a skeleton whose module layout and seams are the deliverable, not a finished product.",
     ],
   },
   {
     slug: "consignacion",
     name: "Consignación",
     tagline:
-      "Consignment management for small retailers: products, shops, consignments, and settlements in one Next.js application.",
-    repoUrl: "https://github.com/jcampos90/nextjs_consignacion",
-    stack: ["Next.js 16", "React", "TypeScript", "Prisma", "libSQL", "Tailwind CSS", "Vitest"],
+      "Consignment management for small retailers: products, shops, stock movements, and commission settlements.",
+    sourceNote:
+      "Source not published yet — the repository is still empty. Ask me and I'll walk you through it.",
+    stack: ["Next.js 16", "React 19", "TypeScript", "Prisma", "libSQL", "Tailwind CSS 4", "Vitest"],
     body: [
-      "Consignment is awkward to model: stock sits in someone else's shop, ownership never transfers, and money only moves when an item sells. The application tracks products, the shops holding them, what has been consigned, and what is owed back after each settlement.",
-      "Built with the Next.js App Router and Prisma over libSQL, with the data model and the settlement logic kept in their own modules so the part that decides who gets paid is testable on its own.",
+      "Consignment is awkward to model: stock sits in someone else's shop, ownership never transfers, and money only moves when an item sells. The app tracks products, the commerces holding them, every stock movement, and what is owed back after each settlement.",
+      "Three decisions carry the design. The commission rate is snapshotted onto each consignment and settlement line, so changing a rate later cannot rewrite history. Stock is never stored as a number — it is always the sum of the movement rows, so it cannot drift out of step with what actually happened. And settling the same movement twice is made impossible by a database constraint rather than by application logic.",
+      "Settlement calculations use decimal arithmetic with explicit rounding, and the calculator and the consignment state machine are pure functions with no I/O — which is what lets the suite reach 213 tests, including an end-to-end test that walks a product from creation through activation, two sales, a refill, an adjustment, a settlement, and payment.",
     ],
   },
 ];
@@ -61,9 +72,9 @@ export const projects: Project[] = [
  *
  * It was going to be a short fourth item — proof of shipping. It was dropped
  * because jcdevsolutions.com currently has no DNS record and serves nothing,
- * so it cannot honestly be presented as a live artifact, and because a
- * client-services marketing site is aimed at the wrong audience for this page.
+ * it cannot honestly be presented as a live artifact, its GitHub repository is
+ * private, and a client-services marketing site is aimed at the wrong audience
+ * for this page.
  *
- * Re-add it here once it is actually deployed, or if you want it listed with
- * its repository link instead of a live URL.
+ * Re-add it here once it is actually deployed.
  */
