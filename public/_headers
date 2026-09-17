@@ -1,0 +1,15 @@
+# Cloudflare Pages headers.
+#
+# The Open Graph image is emitted by Next.js as `out/opengraph-image` with no
+# file extension. Cloudflare infers Content-Type from the extension, so without
+# this rule it is served as application/octet-stream and social scrapers
+# (LinkedIn, Slack, iMessage) refuse to render the preview.
+
+/opengraph-image
+  Content-Type: image/png
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=()

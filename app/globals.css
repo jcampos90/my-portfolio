@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Light-default by decision — recruiters scan and print, and a
+ * dark-only site is a formatting problem for them. Purple is an accent, not a
+ * surface colour.
+ */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.19 0.02 285);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0.02 285);
+
+  --muted: oklch(0.968 0.006 285);
+  --muted-foreground: oklch(0.5 0.02 285);
+
+  --accent: oklch(0.965 0.022 293);
+  --accent-foreground: oklch(0.35 0.16 293);
+
+  --primary: oklch(0.52 0.24 293);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.918 0.008 285);
+  --input: oklch(0.918 0.008 285);
+  --ring: oklch(0.52 0.24 293);
+
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-code), ui-monospace, monospace;
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-sm: calc(var(--radius) - 0.375rem);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Respect the user's motion preference rather than animating regardless. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Recruiters print these. Keep the page legible on paper. */
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #444;
+  }
+}
