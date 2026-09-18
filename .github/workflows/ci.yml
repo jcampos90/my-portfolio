@@ -1,0 +1,27 @@
+# The Portfolio's contract is only a check if something runs it. Cloudflare
+# Pages builds with `npx next build`, which never sees this file, so this is the
+# gate that fails before a broken contract reaches the deployed site.
+#
+# See docs/adr/0004-content-fields-declare-how-they-surface.md.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # typecheck (field contracts) -> build -> contract check against out/
+      - run: npm run verify

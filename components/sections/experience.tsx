@@ -1,3 +1,4 @@
+/** Field contract: ./experience.contract.ts. */
 import { roles } from "@/content/experience";
 
 import { Section } from "@/components/section";

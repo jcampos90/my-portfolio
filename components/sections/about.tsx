@@ -1,3 +1,4 @@
+/** Field contracts: ./about.contract.ts — skills, education and languages. */
 import { skillGroups } from "@/content/skills";
 import { about, education, languages, site } from "@/content/site";
 

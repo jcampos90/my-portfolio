@@ -1,3 +1,4 @@
+/** Field contract: ./certifications.contract.ts. */
 import { ArrowUpRight, Award } from "lucide-react";
 
 import { certifications } from "@/content/certifications";

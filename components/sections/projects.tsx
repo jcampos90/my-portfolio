@@ -1,3 +1,7 @@
+/**
+ * Field contract: ./projects.contract.ts. Add a field to `Project` and the
+ * build stops in that file until the field is classified.
+ */
 import { ArrowUpRight } from "lucide-react";
 
 import { projects } from "@/content/projects";

@@ -27,7 +27,6 @@ export const site = {
   links: {
     github: "https://github.com/jcampos90",
     linkedin: "https://linkedin.com/in/juan-campos-a8082460",
-    businessSite: "https://jcdevsolutions.com",
   },
 
   /** One line that has to survive a five-second scan. */
@@ -45,13 +44,25 @@ export const about = [
   "More recently I've been integrating generative AI into the way I build — prototyping, research, and app scaffolding — while keeping the judgement about what ships firmly human.",
 ] as const;
 
-export const education = {
+/** Named so a field contract can cover it — see components/sections/about.contract.ts. */
+export type Education = {
+  degree: string;
+  institution: string;
+  year: string;
+};
+
+export type Language = {
+  name: string;
+  level: string;
+};
+
+export const education: Education = {
   degree: "Bachelor of Science in Computer Engineering",
   institution: "Universidad Internacional San Isidro Labrador (UISIL)",
   year: "2012",
-} as const;
+};
 
-export const languages = [
+export const languages: Language[] = [
   { name: "Spanish", level: "Native" },
   { name: "English", level: "C1 — Professional working proficiency" },
-] as const;
+];

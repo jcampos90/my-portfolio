@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review — Portfolio (my-portfolio)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 5 5; }
+      .deepbox { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .ghost { opacity: .45; }
+      .mermaid { display: flex; justify-content: center; }
+      .band { border-left-width: 6px; }
+      .x { color: #dc2626; font-weight: 700; }
+      .ok { color: #059669; font-weight: 700; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900">
+    <main class="mx-auto max-w-5xl space-y-14 px-6 py-14">
+
+      <header class="space-y-6">
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-500">architecture review</p>
+          <h1 class="mt-2 font-serif text-4xl font-semibold tracking-tight">Portfolio — <span class="font-mono text-3xl">my-portfolio</span></h1>
+          <p class="mt-2 text-sm text-slate-500">2026-09-18 · static Next.js 16 export · ~1,050 lines of TS/TSX · 4 commits · 7 candidates</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+          <span class="flex items-center gap-2"><span class="inline-block h-4 w-6 rounded-sm border-2 border-slate-400 bg-white"></span> module</span>
+          <span class="flex items-center gap-2"><svg width="34" height="10"><line x1="1" y1="5" x2="33" y2="5" stroke="#64748b" stroke-width="2" class="seam"/></svg> seam</span>
+          <span class="flex items-center gap-2"><svg width="34" height="10"><line x1="1" y1="5" x2="33" y2="5" stroke="#dc2626" stroke-width="2"/></svg> hand-copied fact</span>
+          <span class="flex items-center gap-2"><span class="inline-block h-4 w-6 rounded-sm" style="background:linear-gradient(135deg,#0f172a,#1e293b)"></span> deep module</span>
+        </div>
+
+        <p class="max-w-3xl text-sm leading-6 text-slate-600">
+          Small and mostly well-shaped: one renderer per record type, content as pure data, a genuinely deep <span class="font-mono text-xs">Section</span>.
+          The friction is not sprawl — it is <strong class="font-medium text-slate-800">hand-copied facts with nothing relating the copies</strong>, and one of them
+          fails silently in front of the audience. Every count below came from grep over the source and the built <span class="font-mono text-xs">out/index.html</span>.
+        </p>
+
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-xs leading-5 text-emerald-800">
+          <strong class="font-semibold">Status:</strong> candidate 1 has since been implemented — field contracts in
+          <span class="font-mono">components/sections/*.contract.ts</span>, the check in <span class="font-mono">test/portfolio-contract.test.mts</span>,
+          and <span class="font-mono">docs/adr/0004-content-fields-declare-how-they-surface.md</span>. The rest are still open.
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-12">
+
+        <!-- ============ 1 ============ -->
+        <article id="candidate-1" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Strong</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">the one design defect</span>
+              <span class="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">implemented</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">1 · Join the content type to its renderer</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              components/sections/projects.tsx:3 (and about:1, experience:1, certifications:1, hero:3, header:1, contact:3) ·
+              content/projects.ts:14–24 · package.json:6–10
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — the renderer reaches across and creates its data</p>
+              <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <div class="rounded border border-slate-200 bg-white p-2">
+                  <p class="font-mono text-[10px] text-slate-500">content/projects.ts — type Project</p>
+                  <div class="mt-1 flex flex-wrap gap-1 text-[10px]">
+                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono">slug</span>
+                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono">name</span>
+                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono">tagline</span>
+                    <span class="rounded bg-red-50 px-1.5 py-0.5 font-mono text-red-600">summary</span>
+                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono">stack</span>
+                    <span class="rounded bg-emerald-50 px-1.5 py-0.5 font-mono">body</span>
+                  </div>
+                  <p class="mt-2 text-[10px] text-red-600">adding a <em>required</em> field flags this literal — and nothing else</p>
+                </div>
+
+                <div class="my-2 text-center text-[10px] text-slate-400">tsc ✓ green</div>
+
+                <div class="rounded border-2 border-dashed border-red-300 bg-white p-2">
+                  <p class="font-mono text-[10px] text-slate-500">components/sections/projects.tsx — <span class="text-red-600">export function Projects()</span></p>
+                  <div class="mt-1 flex flex-wrap gap-1 text-[10px]">
+                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">name</span>
+                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">tagline</span>
+                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">body</span>
+                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">stack</span>
+                    <span class="rounded bg-red-100 px-1.5 py-0.5 font-mono text-red-700">summary ✗ never rendered</span>
+                  </div>
+                  <p class="mt-2 text-[10px] text-red-600">
+                    The section interface takes <span class="font-mono">zero parameters</span>. A test cannot substitute content, and the compiler cannot
+                    express “every field of Project appears on the page”.
+                  </p>
+                </div>
+
+                <p class="mt-3 text-[11px] leading-5 text-red-600">
+                  A field can be populated for all three Featured projects, typecheck clean, and never reach the page. No test notices: there was no test.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — one contract crossing content and page</p>
+              <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="rounded border border-slate-200 bg-white px-2 py-3 text-center text-[10px] font-mono text-slate-500">content/*.ts<br/><span class="text-slate-400">pure data — importable</span></div>
+                  <div class="rounded border border-slate-200 bg-white px-2 py-3 text-center text-[10px] font-mono text-slate-500">page + contracts<br/><span class="text-slate-400">renders once</span></div>
+                </div>
+                <div class="my-1 text-center text-slate-300">↓</div>
+                <div class="deepbox rounded-lg px-4 py-4 text-white">
+                  <p class="text-[10px] uppercase tracking-wider text-emerald-300">test surface</p>
+                  <p class="mt-1 font-mono text-sm">the Portfolio's contract</p>
+                  <ul class="mt-3 space-y-1 border-t border-white/15 pt-3 text-[10px] text-slate-300">
+                    <li>every rendered field of every record appears</li>
+                    <li>every record appears at least once</li>
+                    <li>the prose in content/site.ts appears</li>
+                    <li>the file at <span class="font-mono">cvPath</span> exists, source and build</li>
+                    <li>out/ is newer than every source file</li>
+                  </ul>
+                </div>
+                <div class="mt-2 rounded border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                  <p class="text-[11px] leading-5 text-emerald-800">
+                    Shipped with no new dependency: <span class="font-mono">node --test</span> reads the content modules directly. Nine assertions, all green,
+                    and each gate was verified to fail when it should.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> No invariant joined a content record's type to its renderer: sections create their own content dependency, so a field could exist in the data, typecheck clean, and never appear on the page.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> A <span class="font-mono text-xs">FieldContract&lt;T&gt;</span> declared next to each renderer, enforced twice — by <span class="font-mono text-xs">tsc</span>, and by a check that reads the built page.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ the interface becomes the test surface</li>
+              <li>→ data-present/page-wrong fails the build</li>
+              <li>→ leverage: one render, all record invariants</li>
+              <li>→ zero dependencies added</li>
+            </ul>
+          </div>
+
+          <div class="mx-6 mb-6 rounded border border-amber-200 bg-amber-50 px-3 py-2">
+            <p class="text-[11px] leading-5 text-amber-800">
+              The tempting fix — pass content into each section as a prop — was rejected as a <em>hypothetical seam</em>: there is one content module per record
+              type and nothing varies across it.
+            </p>
+          </div>
+        </article>
+
+        <!-- ============ 2 ============ -->
+        <article id="candidate-2" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Strong</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">element-level seam</span>
+              <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">already failed 4 of 6 times</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">2 · Give the external link one home</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              hero.tsx:43–60 · projects.tsx:25–35 · certifications.tsx:28–37 · contact.tsx:25–42 · globals.css:109–113 · components/ui/button.tsx:35
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — the same three attributes, by hand, six times</p>
+              <div class="overflow-hidden rounded-lg border border-slate-200">
+                <table class="w-full text-left text-[10px]">
+                  <thead class="bg-slate-50 text-slate-500">
+                    <tr><th class="px-2 py-1.5 font-medium">site</th><th class="px-2 py-1.5 font-medium">target</th><th class="px-2 py-1.5 font-medium">rel</th><th class="px-2 py-1.5 font-medium">sr-only hint</th></tr>
+                  </thead>
+                  <tbody class="font-mono">
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">projects.tsx:25</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td></tr>
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">certifications.tsx:28</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td></tr>
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">hero.tsx:43</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="x px-2 py-1.5">✗</td></tr>
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">hero.tsx:52</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="x px-2 py-1.5">✗</td></tr>
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">contact.tsx:25</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="x px-2 py-1.5">✗</td></tr>
+                    <tr class="border-t border-slate-100"><td class="px-2 py-1.5">contact.tsx:34</td><td class="ok px-2 py-1.5">✓</td><td class="ok px-2 py-1.5">✓</td><td class="x px-2 py-1.5">✗</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="mt-3 text-[11px] leading-5 text-red-600">
+                <span class="font-mono">rel="noreferrer noopener"</span> appears 6×; “opens in a new tab” appears 2×. Remembered twice, forgotten four times,
+                by the same author in the same style — the signature of knowledge with no home.
+              </p>
+              <p class="mt-2 text-[11px] leading-5 text-red-600">
+                The styling seam is at “class string” (<span class="font-mono">buttonClass</span>), so it cannot own <span class="font-mono">target</span>,
+                <span class="font-mono">rel</span> or the accessible name. Meanwhile <span class="font-mono">globals.css:109</span> defines “external link” a second
+                way — by <span class="font-mono">href^="http"</span> — and agrees with the markup only by coincidence.
+              </p>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — one element seam, six thin callers</p>
+              <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <div class="deepbox rounded-lg px-4 py-4 text-white">
+                  <p class="text-[10px] uppercase tracking-wider text-emerald-300">deep module</p>
+                  <p class="mt-1 font-mono text-sm">ExternalLink</p>
+                  <p class="mt-1 text-[11px] text-slate-300">interface: <span class="font-mono">href · children · what the link is for</span></p>
+                  <div class="mt-3 space-y-1 border-t border-white/15 pt-3 text-[10px] text-slate-400">
+                    <p class="ghost font-mono">target="_blank" · rel="noreferrer noopener"</p>
+                    <p class="ghost font-mono">sr-only "(opens in a new tab)" — always</p>
+                    <p class="ghost font-mono">brand icon by target · print rule keys off it</p>
+                  </div>
+                </div>
+                <div class="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]">
+                  <div class="rounded border border-slate-200 bg-white px-1 py-2">hero</div>
+                  <div class="rounded border border-slate-200 bg-white px-1 py-2">projects</div>
+                  <div class="rounded border border-slate-200 bg-white px-1 py-2">certifications</div>
+                  <div class="rounded border border-slate-200 bg-white px-1 py-2">contact</div>
+                  <div class="rounded border border-slate-200 bg-white px-1 py-2">footer</div>
+                  <div class="rounded border border-emerald-200 bg-emerald-50 px-1 py-2 text-emerald-700">all ✓</div>
+                </div>
+                <p class="mt-3 text-[11px] leading-5 text-emerald-700">
+                  Precedent already exists: <span class="font-mono">brand-icons.tsx</span> is an element-level adapter and the cleanest module in <span class="font-mono">components/ui/</span>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> The new-tab contract is hand-written at six call sites, so the accessible name is present at two and missing at four — and “external link” means two different things in the stylesheet and in the markup.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> One module that owns <span class="font-mono text-xs">target</span>, <span class="font-mono text-xs">rel</span>, the icon and the screen-reader hint; callers pass the href, the label and what the link is for.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ locality: the a11y hint cannot be omitted</li>
+              <li>→ leverage: one interface, six call sites</li>
+              <li>→ interface shrinks to three fields</li>
+              <li>→ print rule keys off the same fact</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ============ 3 ============ -->
+        <article id="candidate-3" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Strong</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">in-process seam</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">three parallel lists</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">3 · One ordered registry of sections</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              components/sections/header.tsx:6–12 · app/page.tsx:11–21 · components/sections/about.tsx:8 · experience.tsx:7 · projects.tsx:12 ·
+              certifications.tsx:10 · contact.tsx:11 · hero.tsx:11 · components/section.tsx:10–37
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — one fact, four copies</p>
+              <div class="relative rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <svg class="pointer-events-none absolute bottom-8 left-[38%] top-8 hidden sm:block" width="10" height="230">
+                  <line x1="5" y1="0" x2="5" y2="230" stroke="#dc2626" stroke-width="2" class="seam"/>
+                </svg>
+                <div class="space-y-2 text-[10px]">
+                  <div class="rounded border border-slate-200 bg-white p-2">
+                    <p class="mb-1 font-mono text-slate-500">header.tsx:6 — navItems</p>
+                    <div class="flex flex-wrap gap-1">
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5">About</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Experience</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Projects</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Certifications</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Contact</span>
+                    </div>
+                  </div>
+                  <div class="rounded border border-slate-200 bg-white p-2">
+                    <p class="mb-1 font-mono text-slate-500">page.tsx:13 — render order</p>
+                    <div class="flex flex-wrap gap-1">
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5">Hero</span><span class="rounded bg-slate-100 px-1.5 py-0.5">About</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Experience</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Projects</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Certifications</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Contact</span>
+                    </div>
+                  </div>
+                  <div class="rounded border border-slate-200 bg-white p-2">
+                    <p class="mb-1 font-mono text-slate-500">each module — Section id=</p>
+                    <div class="flex flex-wrap gap-1 font-mono">
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5">about</span><span class="rounded bg-slate-100 px-1.5 py-0.5">experience</span><span class="rounded bg-slate-100 px-1.5 py-0.5">projects</span><span class="rounded bg-slate-100 px-1.5 py-0.5">certifications</span><span class="rounded bg-slate-100 px-1.5 py-0.5">contact</span>
+                    </div>
+                  </div>
+                  <div class="rounded border border-slate-200 bg-white p-2">
+                    <p class="mb-1 font-mono text-slate-500">each module — Section title=</p>
+                    <div class="flex flex-wrap gap-1">
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5">About</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Experience</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Projects</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Certifications</span><span class="rounded bg-slate-100 px-1.5 py-0.5">Contact</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="mt-3 text-[11px] leading-5 text-red-600">
+                  The anchors are typed <span class="font-mono">string</span>, so <span class="font-mono">tsc</span> proves nothing. Add a sixth section and the nav
+                  silently omits it; rename one and the link silently does nothing. Nav order and page order must match, enforced nowhere.
+                </p>
+                <p class="mt-2 text-[11px] leading-5 text-red-600">
+                  Already wrong once: <span class="font-mono">#top</span> (<span class="font-mono">hero.tsx:11</span>) is hand-written on a <span class="font-mono">div</span>
+                  instead of going through <span class="font-mono">Section</span>, so it is the one of six targets without <span class="font-mono">scroll-mt-20</span> —
+                  and <span class="font-mono">scroll-mt-20</span> (<span class="font-mono">section.tsx:25</span>) vs <span class="font-mono">h-14</span>
+                  (<span class="font-mono">header.tsx:17</span>) is a numeric coupling across two files.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — one domain fact, two projections</p>
+              <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <div class="deepbox rounded-lg px-4 py-4 text-white shadow-sm">
+                  <p class="text-[10px] uppercase tracking-wider text-emerald-300">deep module</p>
+                  <p class="mt-1 font-mono text-sm">sections</p>
+                  <p class="mt-1 text-[11px] text-slate-300">one ordered list: <span class="font-mono">id · label · the module that renders it</span></p>
+                  <div class="mt-3 border-t border-white/15 pt-3 text-[10px]">
+                    <p class="ghost font-mono text-slate-400">about · experience · projects · certifications · contact</p>
+                  </div>
+                </div>
+                <svg class="mx-auto my-2 block" width="220" height="46">
+                  <line x1="70" y1="4" x2="40" y2="40" stroke="#64748b" stroke-width="1.5"/>
+                  <line x1="150" y1="4" x2="180" y2="40" stroke="#64748b" stroke-width="1.5"/>
+                  <polygon points="40,40 34,32 46,32" fill="#64748b"/>
+                  <polygon points="180,40 174,32 186,32" fill="#64748b"/>
+                </svg>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="rounded border border-slate-200 bg-white px-3 py-2 text-center text-[11px]">
+                    <p class="font-mono text-slate-500">Header nav</p><p class="mt-1 text-slate-400">derives</p>
+                  </div>
+                  <div class="rounded border border-slate-200 bg-white px-3 py-2 text-center text-[11px]">
+                    <p class="font-mono text-slate-500">page.tsx</p><p class="mt-1 text-slate-400">derives</p>
+                  </div>
+                </div>
+                <p class="mt-3 text-[11px] leading-5 text-emerald-700">
+                  Anchor ids, heading labels and order are stated once and read twice, so they cannot drift. <span class="font-mono">Section</span> stops
+                  restating what the registry already knows.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> The Portfolio's section list is written four times — nav order, render order, anchor id, heading label — with no module owning it, and the sixth anchor already lost its header offset.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> One ordered list where each entry carries its id, its label and the module that renders it; <span class="font-mono text-xs">Header</span> and <span class="font-mono text-xs">page.tsx</span> both derive from it.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ locality: adding a section is one edit</li>
+              <li>→ anchors cannot drift from the nav</li>
+              <li>→ leverage: one interface, two call sites</li>
+              <li>→ <span class="font-mono">Section</span> keeps the a11y pairing, loses the restating</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ============ 4 ============ -->
+        <article id="candidate-4" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">content seam</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">4 · Make <span class="font-mono text-xl">content/</span> the copy seam the README claims it is</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              README.md:21–30 · components/sections/projects.tsx:13–16 · components/sections/contact.tsx:12–14 ·
+              components/sections/about.tsx:48 · content/certifications.ts:1
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — where the copy is authored</p>
+              <div class="space-y-1.5">
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-500 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/site.ts</span><span class="text-slate-500">intro, about, education, languages</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-500 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/projects.ts</span><span class="text-slate-500">3 featured projects</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-red-400 bg-red-50 px-3 py-2 text-[11px]"><span class="font-mono">sections/projects.tsx</span><span class="text-red-600">“Three projects I've built recently…”</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-red-400 bg-red-50 px-3 py-2 text-[11px]"><span class="font-mono">sections/contact.tsx</span><span class="text-red-600">“The quickest way to reach me is email…”</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-red-400 bg-red-50 px-3 py-2 text-[11px]"><span class="font-mono">sections/about.tsx</span><span class="text-red-600">“Working with distributed teams”</span></div>
+              </div>
+              <div class="mt-3 rounded border border-red-200 bg-red-50/70 px-3 py-2">
+                <p class="text-[11px] leading-5 text-red-700">
+                  Two counts restate a list length: <span class="font-mono">projects.tsx:14</span> says <em>“Three”</em> over <span class="font-mono">projects.length</span>,
+                  and <span class="font-mono">certifications.ts:1</span> says <em>“Both credentials”</em>. Add a fourth Featured project and the page lies.
+                  The README now says “nearly all of the copy” in acknowledgement.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — copy crosses one seam</p>
+              <div class="space-y-1.5">
+                <div class="band rounded-r border-l-emerald-600 bg-slate-900 px-3 py-1.5 text-[11px] text-emerald-300">all authored copy</div>
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-600 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/site.ts</span><span class="text-slate-500">identity, intro, about, contact line</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-600 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/projects.ts</span><span class="text-slate-500">records + introduction</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-600 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/experience.ts</span><span class="text-slate-500">roles</span></div>
+                <div class="band flex items-center justify-between rounded-r border-l-emerald-600 bg-emerald-50 px-3 py-2 text-[11px]"><span class="font-mono">content/skills.ts · certifications.ts</span><span class="text-slate-500">grouped data</span></div>
+                <div class="mt-3 rounded-r border-l-4 border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+                  section modules keep structure only — headings, lists, layout
+                </div>
+              </div>
+              <div class="mt-3 rounded border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                <p class="text-[11px] leading-5 text-emerald-800">Counts derive from the lists, so they cannot go stale.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> Prose that belongs to the Portfolio's facts is authored inside three section modules, and two counts restate array lengths — so the documented “one obvious file” seam is a claim, not a property.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> Move the remaining prose into the content modules and derive the counts from the lists.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ locality: copy edits land in one directory</li>
+              <li>→ stale counts become impossible</li>
+              <li>→ section modules shrink to rendering</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ============ 5 ============ -->
+        <article id="candidate-5" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">derived projections</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">5 · One facts record, four projections</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              content/site.ts:9–40 · app/layout.tsx:21–95 · app/opengraph-image.tsx:5, 36 · scripts/setup-cloudflare.sh:189 ·
+              README.md:34, 39 · public/cv/
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — one fact, restated</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <pre class="mermaid">
+flowchart TB
+  S["site.ts<br/>name · role · location · languages · cvPath"]
+  M["layout: title formula 5x"]
+  J["layout: JSON-LD<br/>address split by hand"]
+  K["layout: keywords 7 strings"]
+  O["opengraph-image: domain literal"]
+  W["setup wizard: domain + CV name"]
+  S --> M
+  S --> K
+  S --> J
+  S -. "opengraph-image.tsx:36" .-> O
+  S -. "site.cvPath" .-> W
+  M -. "restates name + role" .-> S
+  K -. "copies role, discipline, location, skills" .-> S
+  J -. "re-splits location, re-encodes languages" .-> S
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#dc2626;
+  class M,J,K,O,W leak
+                </pre>
+              </div>
+              <p class="mt-3 text-[11px] leading-5 text-red-600">
+                <span class="font-mono">layout.tsx:31–40</span> hand-copies seven keyword strings; <span class="font-mono">:49–50</span> splits
+                <span class="font-mono">firstName/lastName</span> from <span class="font-mono">fullName</span> (dropping “Antonio” and “Quesada”);
+                <span class="font-mono">:78–80</span> splits <span class="font-mono">location</span> into locality + country; <span class="font-mono">:83</span>
+                encodes <span class="font-mono">["es","en"]</span> beside the <span class="font-mono">languages</span> array. The title formula appears 5× here and a 6th time in the OG image.
+              </p>
+              <p class="mt-2 text-[11px] leading-5 text-red-600">
+                Worst of the set: the domain is a bare literal inside <span class="font-mono">opengraph-image.tsx:36</span>. It is baked into a PNG —
+                nothing fails, no link 404s, and only a human notices a stale social preview.
+              </p>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — project from one interface</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-4">
+                <div class="deepbox rounded-lg px-4 py-4 text-white">
+                  <p class="text-[10px] uppercase tracking-wider text-emerald-300">deep module</p>
+                  <p class="mt-1 font-mono text-sm">Portfolio facts</p>
+                  <p class="mt-1 text-[11px] text-slate-300">identity, structured location, languages, links, asset paths — stated once</p>
+                  <div class="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-3 text-[10px] text-slate-400">
+                    <p class="ghost font-mono">title()</p>
+                    <p class="ghost font-mono">metadata()</p>
+                    <p class="ghost font-mono">structuredData()</p>
+                    <p class="ghost font-mono">ogHeader()</p>
+                  </div>
+                </div>
+                <div class="mt-3 grid grid-cols-4 gap-2 text-center text-[10px]">
+                  <div class="rounded border border-slate-200 bg-slate-50 px-1 py-2">metadata</div>
+                  <div class="rounded border border-slate-200 bg-slate-50 px-1 py-2">JSON-LD</div>
+                  <div class="rounded border border-slate-200 bg-slate-50 px-1 py-2">OG image</div>
+                  <div class="rounded border border-slate-200 bg-slate-50 px-1 py-2">sitemap · robots</div>
+                </div>
+                <p class="mt-3 text-[11px] leading-5 text-emerald-700">
+                  Rename the role once and every projection follows. The keywords stop being a hand-kept copy of <span class="font-mono">site</span> and <span class="font-mono">skills</span>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> <span class="font-mono text-xs">layout.tsx</span> re-types facts that <span class="font-mono text-xs">content/</span> already owns, and four of the domain's ten homes are invisible to the compiler — one of them baked into a PNG.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> One facts record holding structured identity, location, languages and asset paths; one place derives the title, the metadata block, the structured data and the OG header from it.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ rename once, six sites follow</li>
+              <li>→ structured data must track the page</li>
+              <li>→ leverage: one interface, four projections</li>
+            </ul>
+          </div>
+
+          <div class="mx-6 mb-6 rounded border border-amber-200 bg-amber-50 px-3 py-2">
+            <p class="text-[11px] leading-5 text-amber-800">
+              Does not touch <span class="font-mono">ADR-0003</span>: this moves <em>where</em> facts are stated, not <em>which</em> claims are published.
+            </p>
+          </div>
+        </article>
+
+        <!-- ============ 6 ============ -->
+        <article id="candidate-6" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">content types</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">6 · Give the content records one closed set each</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              content/projects.ts:14–24 · components/sections/projects.tsx:24–38 · content/certifications.ts:19–20, 28–29 · app/layout.tsx:93
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — three states as two open optionals</p>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="rounded border-2 border-emerald-300 bg-emerald-50 p-3">
+                  <p class="font-mono text-emerald-800">repoUrl ✓<br/>sourceNote ✗</p><p class="mt-1 text-slate-500">Source link</p>
+                </div>
+                <div class="rounded border-2 border-emerald-300 bg-emerald-50 p-3">
+                  <p class="font-mono text-emerald-800">repoUrl ✗<br/>sourceNote ✓</p><p class="mt-1 text-slate-500">“Source not published yet.”</p>
+                </div>
+                <div class="rounded border-2 border-dashed border-red-300 bg-red-50 p-3">
+                  <p class="font-mono text-red-700">repoUrl ✓<br/>sourceNote ✓</p><p class="mt-1 text-red-600">note silently dropped</p>
+                </div>
+                <div class="rounded border-2 border-dashed border-red-300 bg-red-50 p-3">
+                  <p class="font-mono text-red-700">repoUrl ✗<br/>sourceNote ✗</p><p class="mt-1 text-red-600">bare card, no source</p>
+                </div>
+              </div>
+              <p class="mt-3 text-[11px] leading-5 text-red-600">
+                Exclusivity exists only as render order — <span class="font-mono">repoUrl ? link : sourceNote ? note : null</span>. The type admits a fourth state with no meaning.
+              </p>
+              <p class="mt-2 text-[11px] leading-5 text-red-600">
+                Same shape elsewhere: <span class="font-mono">verifyUrl</span> must end with <span class="font-mono">credentialId</span> (both halves hand-written twice) and that
+                unchecked URL is published as structured data at <span class="font-mono">layout.tsx:93</span>. Four record types, four keying conventions: <span class="font-mono">slug</span>,
+                a composite <span class="font-mono">company-title</span> string, <span class="font-mono">credentialId</span>, <span class="font-mono">label</span> — no identity field in the model.
+              </p>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — a closed set, matched exhaustively</p>
+              <div class="space-y-2 text-[11px]">
+                <div class="rounded border-2 border-emerald-300 bg-emerald-50 p-3">
+                  <p class="font-mono text-emerald-800">source: published</p><p class="mt-1 text-slate-500">carries the repository url</p>
+                </div>
+                <div class="rounded border-2 border-emerald-300 bg-emerald-50 p-3">
+                  <p class="font-mono text-emerald-800">source: unpublished</p><p class="mt-1 text-slate-500">carries the note</p>
+                </div>
+              </div>
+              <div class="mt-3 rounded border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                <p class="text-[11px] leading-5 text-emerald-800">
+                  Two states, one field, exhaustive match. The credential URL is derived from the id, so the two halves cannot disagree.
+                </p>
+              </div>
+              <div class="mt-3 rounded border border-slate-200 bg-slate-50 px-3 py-2">
+                <p class="text-[11px] leading-5 text-slate-500">
+                  The styling seam already knows how to do this: <span class="font-mono">button.tsx:13–24</span> and <span class="font-mono">badge.tsx:9–12</span> model closed sets with
+                  literal unions, so a variant typo is a compile error. The content seam uses no unions at all.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> A published source is one fact modelled as two independent optionals, and a credential URL must end with its own id — both invariants live in render order and in hand-typed strings, enforced nowhere.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> One field carrying the source state, and a verify URL derived from the credential id.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ impossible states unrepresentable</li>
+              <li>→ interface shrinks to one field</li>
+              <li>→ a URL that can't 404 on a detail</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- ============ 7 ============ -->
+        <article id="candidate-7" class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div class="border-b border-slate-200 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Worth exploring</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">ordering</span>
+            </div>
+            <h2 class="mt-3 font-serif text-2xl font-semibold tracking-tight">7 · Dates that can be sorted, and one stated order</h2>
+            <p class="mt-3 font-mono text-xs leading-6 text-slate-500">
+              content/experience.ts:12, 18–52 · content/certifications.ts:6, 12–30 · components/sections/experience.tsx:9 · certifications.tsx:12
+            </p>
+          </div>
+
+          <div class="grid gap-6 px-6 py-6 lg:grid-cols-2">
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">before — two conventions, opposite directions, both in the editor's head</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="mb-2 font-mono text-[10px] text-slate-500">experience.ts — newest first</p>
+                  <div class="space-y-1.5 border-l-2 border-slate-300 pl-3">
+                    <p class="text-[10px]"><span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">Jan 2023 — Present</span></p>
+                    <p class="text-[10px]"><span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">Mar 2020 — Dec 2022</span></p>
+                    <p class="text-[10px]"><span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">May 2015 — Mar 2020</span></p>
+                  </div>
+                </div>
+                <div>
+                  <p class="mb-2 font-mono text-[10px] text-slate-500">certifications.ts — oldest first</p>
+                  <div class="space-y-1.5 border-l-2 border-slate-300 pl-3">
+                    <p class="text-[10px]"><span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">August 2026</span></p>
+                    <p class="text-[10px]"><span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono">September 2026</span></p>
+                  </div>
+                </div>
+              </div>
+              <p class="mt-4 text-[11px] leading-5 text-red-600">
+                Both render in array order. Both date fields are display <span class="font-mono">string</span>s, so neither list can be sorted or validated.
+                Nothing states the convention and the two modules disagree: reordering a role to fix a typo silently reorders the résumé.
+              </p>
+            </div>
+
+            <div>
+              <p class="mb-3 text-xs uppercase tracking-wider text-slate-400">after — one ordered value, order derived</p>
+              <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+                <div class="deepbox rounded-lg px-4 py-3 text-white">
+                  <p class="text-[10px] uppercase tracking-wider text-emerald-300">one field per record</p>
+                  <p class="mt-1 font-mono text-xs">period: start + optional end <span class="text-slate-400">·</span> date: year + month</p>
+                  <p class="mt-1 text-[10px] text-slate-400">display text derives from it; order derives from it</p>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-center text-[10px]">
+                  <div class="rounded border border-slate-200 bg-white px-2 py-2 font-mono text-slate-500">sort → rendered order</div>
+                  <div class="rounded border border-slate-200 bg-white px-2 py-2 font-mono text-slate-500">format → label</div>
+                </div>
+                <p class="mt-3 text-[11px] leading-5 text-emerald-700">
+                  One convention, stated and checkable. The cheap version is a comment naming the rule in each module; the good version is a field that carries the order.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid gap-6 border-t border-slate-200 px-6 py-5 sm:grid-cols-3">
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm leading-6"><span class="font-semibold">Problem.</span> The only fields with ordering semantics are display strings, and the two content modules order their lists in opposite directions with no stated rule, so a typo fix can silently reorder the résumé.</p>
+              <p class="text-sm leading-6"><span class="font-semibold">Solution.</span> One order-bearing value per date, and a stated convention — or render order derived from the data.</p>
+            </div>
+            <ul class="space-y-1.5 text-xs text-slate-600">
+              <li>→ order stops being tribal knowledge</li>
+              <li>→ sortable and checkable</li>
+              <li>→ display text stays free-form</li>
+            </ul>
+          </div>
+        </article>
+
+      </section>
+
+      <section id="deletion-test" class="rounded-xl border border-slate-200 bg-white p-6">
+        <h2 class="font-serif text-2xl font-semibold tracking-tight">Deletion test — what earns its keep</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+          Delete the module: does the complexity vanish (a pass-through), or reappear across N call sites (it earned its keep)?
+        </p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">lib/utils.ts → cn</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">1 line, 5 callers. Merge order reappears at each site if deleted. <span class="font-medium text-emerald-700">Earns its keep</span> — small, not shallow.</p>
+          </div>
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">components/section.tsx → Section</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">5 callers; hides the <span class="font-mono">id</span> ↔ <span class="font-mono">id-heading</span> ↔ <span class="font-mono">aria-labelledby</span> pairing. <span class="font-medium text-emerald-700">Deepest module in the tree</span>.</p>
+          </div>
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">components/section.tsx → Container</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">4 callers; owns the page width. <span class="font-medium text-emerald-700">Earns its keep</span>, thinly.</p>
+          </div>
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">components/ui/brand-icons.tsx</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">2.5 KB of SVG behind a 1-prop interface, 5 uses, documented as an adapter for lucide 1.x. The one clean element-level seam — <span class="font-medium text-emerald-700">the model for candidate 2</span>.</p>
+          </div>
+          <div class="rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">components/ui/button.tsx → buttonClass</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">8 callers, so it earns its keep on usage — but <span class="font-mono">ghost · link · lg · icon</span> are declared and never selected. <span class="font-medium text-amber-700">Interface 4× oversized</span>.</p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">components/ui/badge.tsx</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">1 caller passes <span class="font-mono">variant="outline"</span>; the <span class="font-mono">default</span> variant is unreachable. <span class="font-medium text-red-700">Pass-through — complexity vanishes</span>.</p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p class="font-mono text-xs text-slate-700">components/ui/card.tsx</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">2 callers, but a card's surface is already defined by tokens in <span class="font-mono">globals.css:34–35</span>. Two homes for one visual fact. <span class="font-medium text-slate-600">Borderline</span>.</p>
+          </div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p class="font-mono text-xs text-slate-700">scripts/setup-cloudflare.sh</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600"><span class="font-mono">set_secret</span>/<span class="font-mono">set_var</span> are defined and never called, so <span class="font-mono">WRITTEN_SECRET</span> can never fill. Inherited wizard library, marked “do not hand-edit”.</p>
+          </div>
+          <div class="rounded-lg border border-red-200 bg-red-50/60 p-3">
+            <p class="font-mono text-xs text-slate-700">content/site.ts → links.businessSite</p>
+            <p class="mt-1 text-[11px] leading-5 text-slate-600">Zero consumers — <span class="font-medium text-red-700">since deleted</span> rather than labelled structural, because a named consumer is what the contract requires.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="well-shaped" class="rounded-xl border border-slate-200 bg-white p-6">
+        <h2 class="font-serif text-2xl font-semibold tracking-tight">Already well-shaped — do not touch</h2>
+        <ul class="mt-4 grid gap-2 text-sm leading-6 text-slate-600 sm:grid-cols-2">
+          <li><span class="font-medium text-slate-800">One renderer per record type.</span> Five content modules, five section modules, clean 1:1 — the property most codebases this size get wrong.</li>
+          <li><span class="font-medium text-slate-800">Section is genuinely deep.</span> A four-field interface hiding the section/anchor/heading pairing, the container, the spacing scale and the sticky-header offset.</li>
+          <li><span class="font-medium text-slate-800">Content modules are pure data.</span> No JSX, no side effects — which is exactly what made the emitted output testable in candidate 1.</li>
+          <li><span class="font-medium text-slate-800">The ADRs are real, and so is the intent at the point of edit.</span> <span class="font-mono text-xs">content/projects.ts:1–12</span> and <span class="font-mono text-xs">:69–78</span> record why a project has no link and why the Business site is absent.</li>
+        </ul>
+      </section>
+
+      <section id="top-recommendation">
+        <div class="rounded-xl px-8 py-8 text-white" style="background:linear-gradient(135deg,#0f172a,#1e293b)">
+          <p class="text-xs uppercase tracking-[0.2em] text-emerald-300">top recommendation</p>
+          <h2 class="mt-3 font-serif text-3xl font-semibold tracking-tight">
+            <span class="text-emerald-300">Done:</span> <a href="#candidate-1" class="underline decoration-emerald-400/60 underline-offset-4">1 · Join the content type to its renderer</a>
+          </h2>
+          <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+            It was the only defect where the failure was silent <em>and</em> reached the audience, and the cheapest to close: the content modules are pure
+            data and the emitted page is already the real interface, so the contract needed no refactoring and no new dependency. It is now the detector for
+            the whole family of hand-copied facts below it.
+          </p>
+          <p class="mt-4 max-w-3xl text-sm leading-6 text-slate-400">
+            Next, in order: <a href="#candidate-3" class="underline decoration-slate-500 underline-offset-4">3 · One ordered registry of sections</a> — the deepest
+            structural win, three parallel lists collapsing into one module — then <a href="#candidate-2" class="underline decoration-slate-500 underline-offset-4">2 · Give the external link one home</a>,
+            where the six hand-written sites have already forgotten the accessible name four times.
+          </p>
+        </div>
+      </section>
+
+      <footer class="pb-6 pt-2 text-xs text-slate-400">
+        Vocabulary: module · interface · implementation · depth · seam · adapter · leverage · locality.
+        Domain terms follow <span class="font-mono">CONTEXT.md</span> (“Portfolio”, “Business site”, “Featured project”, “Field contract”).
+      </footer>
+    </main>
+  </body>
+</html>

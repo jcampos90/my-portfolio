@@ -15,3 +15,7 @@ _Avoid_: Main site, marketing site, the website
 **Featured project**:
 One of the small set of repositories the Portfolio presents with a written account of the work, as distinct from the full inventory of projects on disk.
 _Avoid_: Case study, showcase, portfolio item
+
+**Field contract**:
+The declaration next to a renderer of how each field of a content record surfaces on the Portfolio — shown on the page, or consumed elsewhere with that consumer named. A field that does neither fails the build. See `docs/adr/0004-content-fields-declare-how-they-surface.md`.
+_Avoid_: Field map, schema, coverage checklist, field manifest
