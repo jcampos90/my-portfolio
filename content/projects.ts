@@ -56,8 +56,7 @@ export const projects: Project[] = [
     name: "Consignación",
     tagline:
       "Consignment management for small retailers: products, shops, stock movements, and commission settlements.",
-    sourceNote:
-      "Source not published yet — the repository is still empty. Ask me and I'll walk you through it.",
+    sourceNote: "Source not published yet.",
     stack: ["Next.js 16", "React 19", "TypeScript", "Prisma", "libSQL", "Tailwind CSS 4", "Vitest"],
     body: [
       "Consignment is awkward to model: stock sits in someone else's shop, ownership never transfers, and money only moves when an item sells. The app tracks products, the commerces holding them, every stock movement, and what is owed back after each settlement.",

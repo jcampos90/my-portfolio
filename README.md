@@ -52,7 +52,16 @@ npm run typecheck
 
 ## Deployment
 
-Cloudflare Pages, building `npm run build` and serving `out/`. The custom domain `portfolio.jcdevsolutions.com` is a DNS record in the `jcdevsolutions.com` Cloudflare zone.
+Cloudflare Pages, connected to this repository.
+
+- **Framework preset:** Next.js (Static HTML Export) — build command `npx next build`, output directory `out`
+- **Production branch:** `main`
+- **Node version:** pinned by `.nvmrc`
+- **Custom domain:** `portfolio.jcdevsolutions.com`, a DNS record in the `jcdevsolutions.com` zone, which already runs on Cloudflare nameservers
+
+Analytics is Cloudflare Web Analytics, switched on with the one-click **Metrics → Enable Web Analytics** toggle on the Pages project. Cloudflare injects the beacon at deploy time, which is why there is no analytics code in this repository — do not add a beacon snippet, or page views will be counted twice.
+
+`scripts/setup-cloudflare.sh` walks through the whole setup interactively. It is a one-off, not part of the build.
 
 ## Structure
 
