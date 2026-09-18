@@ -5,6 +5,7 @@ import { site } from "@/content/site";
 import { Container } from "@/components/section";
 import { GitHubIcon, LinkedInIcon } from "@/components/ui/brand-icons";
 import { buttonClass } from "@/components/ui/button";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export function Hero() {
   return (
@@ -40,24 +41,20 @@ export function Hero() {
             <Download aria-hidden="true" />
             Download CV
           </a>
-          <a
+          <ExternalLink
             href={site.links.github}
-            target="_blank"
-            rel="noreferrer noopener"
             className={buttonClass({ variant: "outline" })}
           >
             <GitHubIcon className="size-4" />
             GitHub
-          </a>
-          <a
+          </ExternalLink>
+          <ExternalLink
             href={site.links.linkedin}
-            target="_blank"
-            rel="noreferrer noopener"
             className={buttonClass({ variant: "outline" })}
           >
             <LinkedInIcon className="size-4" />
             LinkedIn
-          </a>
+          </ExternalLink>
         </div>
       </Container>
     </div>

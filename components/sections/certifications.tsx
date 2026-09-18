@@ -5,6 +5,7 @@ import { certifications } from "@/content/certifications";
 
 import { Section } from "@/components/section";
 import { Card } from "@/components/ui/card";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export function Certifications() {
   return (
@@ -26,16 +27,14 @@ export function Certifications() {
                   <p className="mt-3 text-sm text-muted-foreground">{certification.summary}</p>
 
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                    <a
+                    <ExternalLink
                       href={certification.verifyUrl}
-                      target="_blank"
-                      rel="noreferrer noopener"
+                      context={certification.name}
                       className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
                     >
                       Verify credential
                       <ArrowUpRight className="size-3" aria-hidden="true" />
-                      <span className="sr-only">for {certification.name} (opens in a new tab)</span>
-                    </a>
+                    </ExternalLink>
                     <span className="font-mono text-muted-foreground">
                       ID {certification.credentialId}
                     </span>

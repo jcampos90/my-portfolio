@@ -106,7 +106,9 @@
     color: #000;
   }
 
-  a[href^="http"]::after {
+  /* `data-external` is ExternalLink's claim; this is the same marker the
+     gate checks, so print and markup agree on one definition. */
+  a[data-external]::after {
     content: " (" attr(href) ")";
     font-size: 0.75em;
     color: #444;

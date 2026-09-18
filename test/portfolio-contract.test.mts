@@ -203,3 +203,97 @@ test("the CV exists at site.cvPath, in public/ and in the build", () => {
   );
 });
 
+type Anchor = { attrs: string; text: string; href: string };
+
+/** Every `<a …>…</a>` in already-de-scripted markup. */
+function anchorsIn(markup: string): Anchor[] {
+  return [...markup.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].map((match) => ({
+    attrs: match[1],
+    text: match[2].replace(/<[^>]*>/g, "").trim(),
+    href: /\bhref="([^"]*)"/.exec(match[1])?.[1] ?? "",
+  }));
+}
+
+/**
+ * The new-tab contract, checked against the built page.
+ *
+ * "External" is a destination fact: an absolute HTTP(S) href whose origin
+ * differs from the Portfolio's own. The `^https?://` filter is load-bearing —
+ * `new URL("mailto:…").origin` is the string `"null"`, so a gate without it
+ * would read the Contact email as external and fail the build on a link that
+ * is deliberately same-tab. `components/ui/external-link.tsx` makes the claim
+ * with `data-external`; this is where the claim meets the destination.
+ */
+function assertExternalLinkContract(markup: string): Anchor[] {
+  const portfolioOrigin = new URL(site.url).origin;
+  const external = anchorsIn(markup).filter(
+    (anchor) =>
+      /^https?:\/\//.test(anchor.href) && new URL(anchor.href).origin !== portfolioOrigin,
+  );
+
+  for (const anchor of external) {
+    const describe = () => `external link ${JSON.stringify(anchor.href)}`;
+    assert.match(anchor.attrs, /\btarget="_blank"/, `${describe()} has no target="_blank".`);
+
+    const rel = /\brel="([^"]*)"/.exec(anchor.attrs)?.[1].split(/\s+/) ?? [];
+    assert.ok(rel.includes("noopener"), `${describe()} rel is missing noopener: ${JSON.stringify(rel)}.`);
+    assert.ok(
+      rel.includes("noreferrer"),
+      `${describe()} rel is missing noreferrer: ${JSON.stringify(rel)}.`,
+    );
+
+    // Match the attribute itself, not a longer name such as `data-external-id`:
+    // the print selector `a[data-external]` matches only this exact one.
+    assert.match(
+      anchor.attrs,
+      /(?:^|\s)data-external(?:="")?(?=\s|$)/,
+      `${describe()} is not marked data-external.`,
+    );
+    assert.ok(
+      anchor.text.includes("(opens in a new tab)"),
+      `${describe()} has no "(opens in a new tab)" hint in its text: ${JSON.stringify(anchor.text)}.`,
+    );
+  }
+
+  return external;
+}
+
+test("every external link carries target, rel, the marker and the new-tab hint", () => {
+  const external = assertExternalLinkContract(page());
+
+  // Non-vacuity: the count comes from content, not from the extractor, so the
+  // day the extractor stops matching this fails instead of passing on nothing.
+  const expected =
+    4 + projects.filter((project) => project.repoUrl).length + certifications.length;
+
+  assert.equal(
+    external.length,
+    expected,
+    `Found ${external.length} external links in out/index.html, expected ${expected} ` +
+      "(Hero and Contact social links, plus every project with a repoUrl and every credential).",
+  );
+});
+
+// The failure mode this guards against is the extractor going blind, so prove
+// the gate still rejects a link that has lost any one part of the contract.
+test("the external-link gate rejects an anchor that has lost part of the contract", () => {
+  const sound =
+    '<a href="https://example.com/" target="_blank" rel="noreferrer noopener" data-external="">' +
+    'Example <span class="sr-only">(opens in a new tab)</span></a>';
+  assert.equal(assertExternalLinkContract(sound).length, 1, "the fixture itself must pass");
+
+  const mutations: [string, string][] = [
+    ["target", sound.replace(' target="_blank"', "")],
+    ["rel", sound.replace(' rel="noreferrer noopener"', "")],
+    ["marker", sound.replace(' data-external=""', "")],
+    ["marker spelling", sound.replace('data-external=""', 'data-external-id=""')],
+    ["hint", sound.replace("(opens in a new tab)", "")],
+  ];
+
+  for (const [name, markup] of mutations) {
+    assert.throws(
+      () => assertExternalLinkContract(markup),
+      `the gate accepted a link with no ${name}`,
+    );
+  }
+});

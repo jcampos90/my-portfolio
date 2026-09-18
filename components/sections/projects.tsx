@@ -10,6 +10,7 @@ import { Section } from "@/components/section";
 import { Badge } from "@/components/ui/badge";
 import { GitHubIcon } from "@/components/ui/brand-icons";
 import { Card } from "@/components/ui/card";
+import { ExternalLink } from "@/components/ui/external-link";
 
 export function Projects() {
   return (
@@ -26,17 +27,15 @@ export function Projects() {
               <h3 className="text-lg font-semibold">{project.name}</h3>
 
               {project.repoUrl ? (
-                <a
+                <ExternalLink
                   href={project.repoUrl}
-                  target="_blank"
-                  rel="noreferrer noopener"
+                  context={project.name}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
                   <GitHubIcon className="size-4" />
                   Source
                   <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                  <span className="sr-only">for {project.name} (opens in a new tab)</span>
-                </a>
+                </ExternalLink>
               ) : project.sourceNote ? (
                 <p className="text-xs text-muted-foreground">{project.sourceNote}</p>
               ) : null}

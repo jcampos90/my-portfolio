@@ -19,3 +19,7 @@ _Avoid_: Case study, showcase, portfolio item
 **Field contract**:
 The declaration next to a renderer of how each field of a content record surfaces on the Portfolio — shown on the page, or consumed elsewhere with that consumer named. A field that does neither fails the build. See `docs/adr/0004-content-fields-declare-how-they-surface.md`.
 _Avoid_: Field map, schema, coverage checklist, field manifest
+
+**External link**:
+A link whose destination lies outside the Portfolio's own origin.
+_Avoid_: New-tab link; using "external" as a synonym for opening in a new tab, which is a separate property
