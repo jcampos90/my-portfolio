@@ -52,7 +52,6 @@ export function Footer() {
         <p>
           {site.fullName} · {site.location}
         </p>
-        <p>Built with Next.js, statically exported.</p>
       </Container>
     </footer>
   );
