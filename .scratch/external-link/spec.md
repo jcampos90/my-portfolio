@@ -1,6 +1,6 @@
 # Give the external link one home
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Source: `.scratch/architecture-review/architecture-review-portfolio.html`, section 2
 

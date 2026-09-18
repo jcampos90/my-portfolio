@@ -6,8 +6,9 @@ import type { ReactNode } from "react";
  * "External" (a destination fact) and "opens in a new tab" (a behavior fact)
  * are deliberately not merged — see CONTEXT.md. This component claims the
  * former with `data-external` and enacts the latter with `target`, `rel` and
- * the accessible-name hint; it can express "external, same tab" and "internal,
- * new tab" (`newTab={false}`) without a rewrite.
+ * the accessible-name hint, so `newTab={false}` expresses "external, same tab"
+ * without a rewrite. An internal destination that opens in a new tab stays a
+ * plain `<a>`: wrapping it here would misclaim it as external.
  *
  * It does not verify the claim: parsing URLs here would couple `components/ui/`
  * to `content/`. `test/portfolio-contract.test.mts` is what decides
